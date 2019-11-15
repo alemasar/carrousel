@@ -2,30 +2,33 @@
   <div class="slider-container">
     {{styles[0]}}
     <ul ref="slider" class="slider">
-      <li v-bind:style="styles[0]" v-bind:class="{ movingUp: isMovingUp[0], isMoving: isMoving[0]}">
+      <li
+        v-bind:style="styles[0]"
+        v-bind:class="{ movingUp: isMovingUp[0], movingDown: isMovingDown[0]}"
+      >
         <img src="../assets/01_img.png" />
       </li>
       <li
         v-bind:style="styles[1]"
-        v-bind:class="{ movingUp: isMovingUp[1], isMoving: isMoving[1] }"
+        v-bind:class="{ movingUp: isMovingUp[1], movingDown: isMovingDown[1] }"
       >
         <img src="../assets/02_img.jpg" />
       </li>
       <li
         v-bind:style="styles[2]"
-        v-bind:class="{ movingUp: isMovingUp[2], isMoving: isMoving[2] }"
+        v-bind:class="{ movingUp: isMovingUp[2], movingDown: isMovingDown[2] }"
       >
         <img src="../assets/03_img.jpg" />
       </li>
       <li
         v-bind:style="styles[3]"
-        v-bind:class="{ movingUp: isMovingUp[3], isMoving: isMoving[3] }"
+        v-bind:class="{ movingUp: isMovingUp[3], movingDown: isMovingDown[3] }"
       >
         <img src="../assets/04_img.png" />
       </li>
       <li
         v-bind:style="styles[4]"
-        v-bind:class="{ movingUp: isMovingUp[4], isMoving: isMoving[4] }"
+        v-bind:class="{ movingUp: isMovingUp[4], movingDown: isMovingDown[4] }"
       >
         <img src="../assets/05_img.jpg" />
       </li>
@@ -55,7 +58,7 @@ export default {
   name: "slider",
   data() {
     return {
-      images: [],
+      initConfig: [],
       styles: [],
       pos: [0, 1, 2, 1, 0],
       top: [2, 1, 0, 1, 2],
@@ -64,7 +67,7 @@ export default {
       x_offset: 100,
       y_offset: 30,
       show: false,
-      isMoving: [false, false, false, false, false],
+      isMovingDown: [false, false, false, false, false],
       isMovingUp: [false, false, false, false, false],
       animationImage: 0
     };
@@ -73,100 +76,162 @@ export default {
     const imagesLi = this.$refs.slider.querySelectorAll("li");
     // const numImages = imagesLi.length;
     //let dir = 1;
+
     imagesLi.forEach((img, i) => {
       const left = (img.offsetWidth - this.x_offset) * i;
       const top = this.y_offset * this.top[i];
-      this.images[i] = {};
-      this.images[i].style = {
+      this.initConfig[i] = {};
+      this.initConfig[i].style = {
         top: top,
         left: left,
         "z-index": this.pos[i]
       };
-      this.styles.push({
-        transform: `translate(${left}px, ${top}px)`,
-        "z-index": this.pos[i]
-      });
+      this.styles.push(this.getStyle(left, top, this.pos[i]));
     });
 
     this.show = true;
   },
   methods: {
+    getStyle(left, top, zIndex) {
+      // eslint-disable-next-line no-console
+      console.log(left);
+      return {
+        transform: `translate(${left}px, ${top}px)`,
+        "z-index": zIndex
+      };
+    },
+    animationConfig(element, styleObjElement, delay) {
+      // eslint-disable-next-line no-console
+      console.log(this.getStyle(...styleObjElement));
+      this.styles.splice(element, 1, this.getStyle(...styleObjElement));
+      //this.initConfig.splice(element, 1, this.getStyle(...styleObjElement));
+      if (delay === "up") {
+        this.isMovingUp.splice(element, 1, true);
+      } else {
+        this.isMovingDown.splice(element, 1, true);
+      }
+    },
     animationMovingUp(index) {
-      let styles = [];
-      this.animationState.forEach(ind => {
-        if (ind === index) {
-          styles.push({
-            transform: `translate(${this.images[index].style.left -
-              this.x_offset}px, ${this.images[this.pos[2]].style.top}px)`,
-            "z-index": this.pos[ind]
-          });
+      /*this.animationConfig(index, [
+        this.initConfig[index].style.left - this.x_offset,
+        this.initConfig[this.pos[2]].style.top,
+        this.pos[2]
+      ]);*/
+      //setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.log("FIRST ANIMATION FINISHED", index);
+
+      /*this.isMovingUp[index] = false;
+      this.isMovingDown[index] = false;*/
+      //let styles = [];
+
+      this.initConfig.forEach((element, i) => {
+        if (i === this.initConfig.length - 1) {
+          setTimeout(() => {
+            this.animationConfig(
+              i,
+              [
+                this.initConfig[0].style.left,
+                this.initConfig[this.pos[0]].style.top,
+                this.pos[0]
+              ],
+              "down"
+            );
+            
+          }, 100 * i);
+
         } else {
-          styles.push({
-            transform: `translate(${this.images[ind].style.left}px, ${this.images[ind].style.top}px)`,
-            "z-index": this.pos[ind]
-          });
+          setTimeout(() => {
+            this.animationConfig(
+              i,
+              [
+                this.initConfig[i + 1].style.left,
+                this.initConfig[this.pos[i + 1]].style.top,
+                this.pos[i + 1]
+              ],
+              "down"
+            );
+          }, 100 * i);
         }
       });
-      this.styles = styles;
-      this.isMoving[index] = true;
-      this.isMovingUp[index] = true;
-      setTimeout(() => {
-        // eslint-disable-next-line no-console
-        console.log("FIRST ANIMATION FINISHED");
-        this.isMovingUp[index] = false;
-        this.isMoving[index] = false;
-        styles = [];
-        this.animationState.forEach(ind => {
-          if (ind === index) {
-            styles.push({
-              transform: `translate(${this.images[2].style.left}px, ${this.images[this.pos[2]].style.top}px)`,
-              "z-index": this.pos[ind]
-            });
-          } else {
-            styles.push({
-              transform: `translate(${this.images[ind].style.left}px, ${this.images[ind].style.top}px)`,
-              "z-index": this.pos[ind]
-            });
-          }
-        });
-        // eslint-disable-next-line no-console
-        console.log(styles);
-        this.styles = styles;
-        this.isMovingUp[index] = true;
 
-        setTimeout(() => {
-                    // eslint-disable-next-line no-console
-        console.log("thirst ANIMATION INIT");
-       styles = [];
+      //setTimeout(() => {
+      /*this.animationConfig(
+        3,
+        [
+          this.initConfig[4].style.left,
+          this.initConfig[this.pos[4]].style.top,
+          this.pos[4]
+        ],
+        "down"
+      );
+      this.animationConfig(
+        4,
+        [
+          this.initConfig[0].style.left,
+          this.initConfig[this.pos[0]].style.top,
+          this.pos[0]
+        ],
+        "down"
+      );
+      this.animationConfig(
+        0,
+        [
+          this.initConfig[1].style.left,
+          this.initConfig[this.pos[1]].style.top,
+          this.pos[1]
+        ],
+        "down"
+      );*/
+      // },2500);
+      // eslint-disable-next-line no-console
+      console.log(this.styles);
+      // setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.log("thirst ANIMATION INIT");
+      /* styles = [];
           this.animationState.forEach(ind => {
-            if (ind === index+1) {
-              styles.push({
-                transform: `translate(${this.images[index+1].style.left}px, ${this.images[this.pos[index+1]].style.top}px)`,
-                "z-index": this.pos[index+1]
-              });
+            if (ind === index + 1) {
+              styles.push(
+                this.getStyle(
+                  this.initConfig[index + 1].style.left,
+                  this.initConfig[this.pos[index + 1]].style.top,
+                  this.pos[index + 1]
+                )
+              );
             } else {
-              styles.push({
-                transform: `translate(${this.images[ind].style.left}px, ${this.images[ind].style.top}px)`,
-                "z-index": this.pos[ind]
-              });
+              styles.push(
+                this.getStyle(
+                  this.initConfig[ind].style.left,
+                  this.initConfig[this.pos[ind]].style.top,
+                  this.pos[ind]
+                )
+              );
             }
           });
           this.styles = styles;
-          this.isMovingUp[index+1] = true;
-        }, 2500);
-        //this.isMoving[index] = true;
-      }, 5000);
+          this.isMovingUp[index + 1] = true;*/
+      /*this.animationConfig(index + 1, [
+          this.initConfig[2].style.left,
+          this.initConfig[this.pos[2]].style.top,
+          this.pos[2]
+        ]);*/
+      // }, 2500);
+      //this.isMoving[index] = true;
+      //}, 5000);
     },
 
     changeImage: function(index) {
       this.imageSelected = index;
-      if (index < this.isMoving.length - 1) {
+      this.isMovingDown=[false, false, false, false, false];
+      this.isMovingUp=[false, false, false, false, false];
+      if (index < this.initConfig.length - 1) {
         //this.animationState[index] = index + 1;
         this.animationMovingUp(index);
-      } else if (index === this.isMoving.length - 1) {
+      } else if (index === this.initConfig.length - 1) {
         //this.animationState[this.isMoving.length - 1] = 0;
         this.animationMovingUp(index);
-      } else if (index === this.isMoving.length) {
+      } else if (index === this.initConfig.length) {
         //this.animationState[0] = 1;
       }
 
@@ -178,11 +243,27 @@ export default {
     }
   },
   watch: {
-    styles: function() {
-      // eslint-disable-next-line no-console
-      console.log("CAMBIO DE STILO ");
+    styles: {
+      deep: true,
+      handler: function(value) {
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE STILO ", value);
+      }
     },
-    deep: true
+    isMovingDown:{
+      deep:true,
+      handler: function (value){
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE isMovingDown ", value);
+      }
+    },
+    isMovingUp:{
+      deep:true,
+      handler: function (value){
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE isMovingUp ", value);
+      }
+    }
   }
 };
 </script>
@@ -195,6 +276,7 @@ export default {
     position: relative;
     height: 350px;
     overflow: hidden;
+
     li {
       width: 250px;
       height: 350px;
@@ -223,7 +305,10 @@ export default {
   }
 
   .movingUp {
-    transition: 5s linear;
+    transition: 0.25s linear;
+  }
+  .movingDown {
+    transition: 0.5s linear;
   }
 }
 </style>
