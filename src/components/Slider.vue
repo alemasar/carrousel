@@ -6,31 +6,51 @@
         v-bind:style="styles[0]"
         v-bind:class="{ movingUp: isMovingUp[0], movingDown: isMovingDown[0]}"
       >
-        <img src="../assets/01_img.png" />
+        <img
+          v-bind:style="stylesImg[0]"
+          v-bind:class="{ animationImg: isMovingOpacity[0] }"
+          src="../assets/01_img.png"
+        />
       </li>
       <li
         v-bind:style="styles[1]"
         v-bind:class="{ movingUp: isMovingUp[1], movingDown: isMovingDown[1] }"
       >
-        <img src="../assets/02_img.jpg" />
+        <img
+          v-bind:style="stylesImg[1]"
+          v-bind:class="{ animationImg: isMovingOpacity[1] }"
+          src="../assets/02_img.jpg"
+        />
       </li>
       <li
         v-bind:style="styles[2]"
         v-bind:class="{ movingUp: isMovingUp[2], movingDown: isMovingDown[2] }"
       >
-        <img src="../assets/03_img.jpg" />
+        <img
+          v-bind:style="stylesImg[2]"
+          v-bind:class="{ animationImg: isMovingOpacity[2] }"
+          src="../assets/03_img.jpg"
+        />
       </li>
       <li
         v-bind:style="styles[3]"
         v-bind:class="{ movingUp: isMovingUp[3], movingDown: isMovingDown[3] }"
       >
-        <img src="../assets/04_img.png" />
+        <img
+          v-bind:style="stylesImg[3]"
+          v-bind:class="{ animationImg: isMovingOpacity[3] }"
+          src="../assets/04_img.png"
+        />
       </li>
       <li
         v-bind:style="styles[4]"
         v-bind:class="{ movingUp: isMovingUp[4], movingDown: isMovingDown[4] }"
       >
-        <img src="../assets/05_img.jpg" />
+        <img
+          v-bind:style="stylesImg[4]"
+          v-bind:class="{ animationImg: isMovingOpacity[4] }"
+          src="../assets/05_img.jpg"
+        />
       </li>
     </ul>
     <ul class="slider-navigator">
@@ -60,16 +80,17 @@ export default {
     return {
       initConfig: [],
       styles: [],
+      stylesImg: [],
       pos: [0, 1, 2, 1, 0],
+      opacity: [0.5, 0.5, 1, 0.5, 0.5],
       top: [2, 1, 0, 1, 2],
-      animationState: [0, 1, 2, 3, 4],
       imageSelected: 0,
       x_offset: 100,
       y_offset: 30,
       show: false,
       isMovingDown: [false, false, false, false, false],
       isMovingUp: [false, false, false, false, false],
-      animationImage: 0
+      isMovingOpacity: [false, false, false, false, false]
     };
   },
   mounted() {
@@ -79,6 +100,7 @@ export default {
       const top = this.y_offset * this.top[i];
       this.initConfig[i] = this.getStyle(left, top, this.pos[i]);
       this.styles.push(this.getStyle(left, top, this.pos[i]));
+      this.stylesImg.push({ opacity: this.opacity[i] });
     });
 
     this.show = true;
@@ -87,12 +109,19 @@ export default {
     getStyle(left, top, zIndex) {
       return {
         transform: `translate(${left}px, ${top}px)`,
-        "z-index": zIndex
+        "z-index": zIndex,
+        "background-color": "#fff"
       };
     },
-    animationConfig(element, styleObjElement, delay) {
+    animationConfig(element, styleObjElement, opacity, delay) {
       this.styles.splice(element, 1, styleObjElement);
       this.initConfig.splice(element, 1, styleObjElement);
+      // eslint-disable-next-line no-console
+      console.log(element +'  '+ opacity )
+      this.stylesImg.splice(element, 1, { opacity: opacity });
+      this.opacity.splice(element, 1, opacity);
+      this.isMovingOpacity.splice(element, 1, true);
+
       if (delay === "up") {
         this.isMovingUp.splice(element, 1, true);
       } else {
@@ -101,25 +130,19 @@ export default {
     },
     animationMovingUp() {
       let config = this.initConfig.slice();
+      let opacity = this.opacity.slice();
       config.forEach((element, i) => {
         if (i === config.length - 1) {
           const animation = () => {
-            this.animationConfig(
-              i,
-              config[0],
-              "down"
-            );
-          }
+            this.animationConfig(i, config[0], opacity[0], "down");
+          };
+          animation();
           setTimeout(animation, 100 * i);
-
         } else {
           const animation = () => {
-            this.animationConfig(
-              i,
-              config[i + 1],
-              "down"
-            );
-          }
+            this.animationConfig(i, config[i + 1], opacity[i+1], "down");
+          };
+          animation();
           setTimeout(animation, 100 * i);
         }
       });
@@ -127,14 +150,18 @@ export default {
 
     changeImage: function(index) {
       this.imageSelected = index;
-      this.isMovingDown=[false, false, false, false, false];
-      this.isMovingUp=[false, false, false, false, false];
+      this.isMovingDown.splice(0, 5, false, false, false, false, false);
+      this.isMovingUp.splice(0, 5, false, false, false, false, false);
+      this.isMovingOpacity.splice(0, 5, false, false, false, false, false);
+      /*if (index===1){
+        this.animationMovingUp(index);
+      }*/
       if (index < this.initConfig.length - 1) {
         this.animationMovingUp(index);
       } else if (index === this.initConfig.length - 1) {
         this.animationMovingUp(index);
-      } else if (index === this.initConfig.length) {
-      }
+      }/* else if (index === this.initConfig.length) {
+      }*/
     }
   },
   watch: {
@@ -145,18 +172,31 @@ export default {
         console.log("CAMBIO DE STILO ", value);
       }
     },
-    isMovingDown:{
-      deep:true,
-      handler: function (value){
+    stylesImg: {
+      deep: true,
+      handler: function(value) {
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE OPACITAT", value);
+      }
+    },
+    isMovingDown: {
+      deep: true,
+      handler: function(value) {
         // eslint-disable-next-line no-console
         console.log("CAMBIO DE isMovingDown ", value);
       }
     },
-    isMovingUp:{
-      deep:true,
-      handler: function (value){
+    isMovingUp: {
+      deep: true,
+      handler: function(value) {
         // eslint-disable-next-line no-console
         console.log("CAMBIO DE isMovingUp ", value);
+      }
+    },
+    isMovingOpacity:{
+        handler: function(value) {
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE isMovingOpacity ", value);
       }
     }
   }
@@ -181,10 +221,6 @@ export default {
         height: 100%;
       }
     }
-    .image0 {
-      transform: translate("0px", "0px");
-      z-index: 2;
-    }
   }
   ul.slider-navigator {
     display: flex;
@@ -203,6 +239,9 @@ export default {
     transition: 0.25s linear;
   }
   .movingDown {
+    transition: 0.5s linear;
+  }
+  .animationImg {
     transition: 0.5s linear;
   }
 }
