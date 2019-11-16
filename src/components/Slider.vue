@@ -117,7 +117,7 @@ export default {
       this.styles.splice(element, 1, styleObjElement);
       this.initConfig.splice(element, 1, styleObjElement);
       // eslint-disable-next-line no-console
-      console.log(element +'  '+ opacity )
+      console.log(element + "  " + opacity);
       this.stylesImg.splice(element, 1, { opacity: opacity });
       this.opacity.splice(element, 1, opacity);
       this.isMovingOpacity.splice(element, 1, true);
@@ -128,39 +128,54 @@ export default {
         this.isMovingDown.splice(element, 1, true);
       }
     },
-    animationMovingUp() {
+    animationMovingUp(dir) {
       let config = this.initConfig.slice();
       let opacity = this.opacity.slice();
       config.forEach((element, i) => {
+        let animation = {};
         if (i === config.length - 1) {
-          const animation = () => {
-            this.animationConfig(i, config[0], opacity[0], "down");
+          let pos = config.length - 2
+          if (dir===1){
+            pos=0;
+          }
+          animation = () => {
+            this.animationConfig(i, config[pos], opacity[pos], "down");
           };
-          animation();
-          setTimeout(animation, 100 * i);
-        } else {
-          const animation = () => {
-            this.animationConfig(i, config[i + 1], opacity[i+1], "down");
+        } else if(i === 0){
+          let pos = config.length - 1
+          if (dir===1){
+            pos=1;
+          }
+          animation = () => {
+            this.animationConfig(i, config[pos], opacity[pos], "down");
           };
-          animation();
-          setTimeout(animation, 100 * i);
+        }else {
+          animation = () => {
+            this.animationConfig(i, config[i + (1*dir)], opacity[i + (1*dir)], "down");
+          };
         }
+        animation();
+        setTimeout(animation, 100 * i);
       });
     },
 
     changeImage: function(index) {
-      this.imageSelected = index;
+      let dir = 1;
       this.isMovingDown.splice(0, 5, false, false, false, false, false);
       this.isMovingUp.splice(0, 5, false, false, false, false, false);
       this.isMovingOpacity.splice(0, 5, false, false, false, false, false);
       /*if (index===1){
         this.animationMovingUp(index);
       }*/
+      if (index < this.imageSelected){
+        dir = -1;
+      }
+      this.imageSelected = index;
       if (index < this.initConfig.length - 1) {
-        this.animationMovingUp(index);
+        this.animationMovingUp(dir);
       } else if (index === this.initConfig.length - 1) {
-        this.animationMovingUp(index);
-      }/* else if (index === this.initConfig.length) {
+        this.animationMovingUp(dir);
+      } /* else if (index === this.initConfig.length) {
       }*/
     }
   },
@@ -193,8 +208,8 @@ export default {
         console.log("CAMBIO DE isMovingUp ", value);
       }
     },
-    isMovingOpacity:{
-        handler: function(value) {
+    isMovingOpacity: {
+      handler: function(value) {
         // eslint-disable-next-line no-console
         console.log("CAMBIO DE isMovingOpacity ", value);
       }
