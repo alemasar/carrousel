@@ -84,7 +84,7 @@ export default {
       pos: [0, 1, 2, 1, 0],
       opacity: [0.5, 0.5, 1, 0.5, 0.5],
       top: [2, 1, 0, 1, 2],
-      imageSelected: 0,
+      imageSelected: 2,
       x_offset: 100,
       y_offset: 30,
       show: false,
@@ -134,24 +134,29 @@ export default {
       config.forEach((element, i) => {
         let animation = {};
         if (i === config.length - 1) {
-          let pos = config.length - 2
-          if (dir===1){
-            pos=0;
+          let pos = config.length - 2;
+          if (dir === 1) {
+            pos = 0;
           }
           animation = () => {
             this.animationConfig(i, config[pos], opacity[pos], "down");
           };
-        } else if(i === 0){
-          let pos = config.length - 1
-          if (dir===1){
-            pos=1;
+        } else if (i === 0) {
+          let pos = config.length - 1;
+          if (dir === 1) {
+            pos = 1;
           }
           animation = () => {
             this.animationConfig(i, config[pos], opacity[pos], "down");
           };
-        }else {
+        } else {
           animation = () => {
-            this.animationConfig(i, config[i + (1*dir)], opacity[i + (1*dir)], "down");
+            this.animationConfig(
+              i,
+              config[i + 1 * dir],
+              opacity[i + 1 * dir],
+              "down"
+            );
           };
         }
         animation();
@@ -160,23 +165,27 @@ export default {
     },
 
     changeImage: function(index) {
-      let dir = 1;
-      this.isMovingDown.splice(0, 5, false, false, false, false, false);
-      this.isMovingUp.splice(0, 5, false, false, false, false, false);
-      this.isMovingOpacity.splice(0, 5, false, false, false, false, false);
-      /*if (index===1){
+      let dir = 1; 
+// eslint-disable-next-line no-console
+      console.log(index +"!=="+ this.imageSelected);
+      if (index !== this.imageSelected) {
+        this.isMovingDown.splice(0, 5, false, false, false, false, false);
+        this.isMovingUp.splice(0, 5, false, false, false, false, false);
+        this.isMovingOpacity.splice(0, 5, false, false, false, false, false);
+        /*if (index===1){
         this.animationMovingUp(index);
       }*/
-      if (index < this.imageSelected){
-        dir = -1;
-      }
-      this.imageSelected = index;
-      if (index < this.initConfig.length - 1) {
-        this.animationMovingUp(dir);
-      } else if (index === this.initConfig.length - 1) {
-        this.animationMovingUp(dir);
-      } /* else if (index === this.initConfig.length) {
+        if (index < this.imageSelected) {
+          dir = -1;
+        }
+        this.imageSelected = index;
+        if (index < this.initConfig.length - 1) {
+          this.animationMovingUp(dir);
+        } else if (index === this.initConfig.length - 1) {
+          this.animationMovingUp(dir);
+        } /* else if (index === this.initConfig.length) {
       }*/
+      }
     }
   },
   watch: {
@@ -254,10 +263,10 @@ export default {
     transition: 0.25s linear;
   }
   .movingDown {
-    transition: 0.5s linear;
+    transition: transform 0.4s ease-in-out;
   }
   .animationImg {
-    transition: 0.5s linear;
+    transition: transform 0.4s ease-in-out;
   }
 }
 </style>
