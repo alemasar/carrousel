@@ -110,10 +110,19 @@ export default {
         nextELement.zIndex = todoList[pos].zIndex;
         this.animation.splice(i, 1, nextELement);
       });
-      this.move();
+      this.move(dir);
     },
-    move() {
+    move(dir) {
       this.animation.forEach((element, i) => {
+        if ((element.pos === 0 && dir === 1) || (element.pos === this.animation.length - 1 && dir === -1)) {
+          // eslint-disable-next-line no-console
+          console.log(" if element.pos " + element.pos + " index " + i);
+          this.zIndex.splice(i, 1, this.getzIndex(-1));
+        } else {
+          // eslint-disable-next-line no-console
+          console.log("else element.pos " + element.pos + " index " + i);
+          this.zIndex.splice(i, 1, this.getzIndex(element.zIndex));
+        }
         const animate = () => {
           this.position.splice(
             i,
@@ -121,21 +130,15 @@ export default {
             this.getPosition(element.left, element.top)
           );
           this.opacity.splice(i, 1, this.getOpacity(element.opacity));
-          if (element.pos === this.animation.length -1){
-            // eslint-disable-next-line no-console
-            console.log(i)
-            this.zIndex.splice(i, 1, -1);
-          } else {
-            this.zIndex.splice(i, 1, this.getzIndex(element.zIndex));
-          }
-          
           this.transformAni.splice(i, 1, this.getTransitionAni(this.delay));
           this.opacityAni.splice(i, 1, this.getOpacityAni(this.delay));
         };
-        setTimeout(()=>{
-        animate();
-        }, 100*i);
+        setTimeout(() => {
+          animate();
+        }, 100 * i);
       });
+      // eslint-disable-next-line no-console
+      console.log(this.zIndex);
     },
     changeImage: function(index) {
       let dir = 1;
