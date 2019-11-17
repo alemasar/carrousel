@@ -3,9 +3,10 @@
     {{styles[0]}}
     <ul ref="slider" class="slider">
       <li
-        v-bind:style="styles[0]"
+        v-bind:style="[styles[0], zIndex[0]]"
         v-bind:class="{ movingUp: isMovingUp[0], movingDown: isMovingDown[0]}"
       >
+        {{pos[0]}}
         <img
           v-bind:style="stylesImg[0]"
           v-bind:class="{ animationImg: isMovingOpacity[0] }"
@@ -13,9 +14,10 @@
         />
       </li>
       <li
-        v-bind:style="styles[1]"
+        v-bind:style="[styles[1], zIndex[1]]"
         v-bind:class="{ movingUp: isMovingUp[1], movingDown: isMovingDown[1] }"
       >
+        {{pos[1]}}
         <img
           v-bind:style="stylesImg[1]"
           v-bind:class="{ animationImg: isMovingOpacity[1] }"
@@ -23,9 +25,10 @@
         />
       </li>
       <li
-        v-bind:style="styles[2]"
+        v-bind:style="[styles[2], zIndex[2]]"
         v-bind:class="{ movingUp: isMovingUp[2], movingDown: isMovingDown[2] }"
       >
+        {{pos[2]}}
         <img
           v-bind:style="stylesImg[2]"
           v-bind:class="{ animationImg: isMovingOpacity[2] }"
@@ -33,9 +36,10 @@
         />
       </li>
       <li
-        v-bind:style="styles[3]"
+        v-bind:style="[styles[3], zIndex[3]]"
         v-bind:class="{ movingUp: isMovingUp[3], movingDown: isMovingDown[3] }"
       >
+        {{pos[3]}}
         <img
           v-bind:style="stylesImg[3]"
           v-bind:class="{ animationImg: isMovingOpacity[3] }"
@@ -43,9 +47,10 @@
         />
       </li>
       <li
-        v-bind:style="styles[4]"
+        v-bind:style="[styles[4], zIndex[4]]"
         v-bind:class="{ movingUp: isMovingUp[4], movingDown: isMovingDown[4] }"
       >
+        {{pos[4]}}
         <img
           v-bind:style="stylesImg[4]"
           v-bind:class="{ animationImg: isMovingOpacity[4] }"
@@ -81,7 +86,8 @@ export default {
       initConfig: [],
       styles: [],
       stylesImg: [],
-      pos: [0, 1, 2, 1, 0],
+      initzIndex: [0, 1, 2, 1, 0],
+      zIndex: [],
       opacity: [0.5, 0.5, 1, 0.5, 0.5],
       top: [2, 1, 0, 1, 2],
       imageSelected: 2,
@@ -90,7 +96,10 @@ export default {
       show: false,
       isMovingDown: [false, false, false, false, false],
       isMovingUp: [false, false, false, false, false],
-      isMovingOpacity: [false, false, false, false, false]
+      isMovingOpacity: [false, false, false, false, false],
+      duration: 1000,
+      pos: [],
+
     };
   },
   mounted() {
@@ -98,48 +107,82 @@ export default {
     imagesLi.forEach((img, i) => {
       const left = (img.offsetWidth - this.x_offset) * i;
       const top = this.y_offset * this.top[i];
-      this.initConfig[i] = this.getStyle(left, top, this.pos[i]);
-      this.styles.push(this.getStyle(left, top, this.pos[i]));
+      this.initConfig[i] = this.getStyle(left, top);
+      this.styles.push(this.getStyle(left, top));
+      this.zIndex.push({ "z-index": this.initzIndex[i] });
       this.stylesImg.push({ opacity: this.opacity[i] });
+      this.pos.push(i);
     });
 
     this.show = true;
   },
   methods: {
-    getStyle(left, top, zIndex) {
+    getStyle(left, top /*, zIndex*/) {
       return {
         transform: `translate(${left}px, ${top}px)`,
-        "z-index": zIndex,
+        //"z-index": zIndex,
         "background-color": "#fff"
       };
     },
-    animationConfig(element, styleObjElement, opacity, delay) {
+    animationConfig(element, styleObjElement, opacity, zIndex, pos, delay) {
       this.styles.splice(element, 1, styleObjElement);
       this.initConfig.splice(element, 1, styleObjElement);
-      // eslint-disable-next-line no-console
-      console.log(element + "  " + opacity);
-      this.stylesImg.splice(element, 1, { opacity: opacity });
-      this.opacity.splice(element, 1, opacity);
-      this.isMovingOpacity.splice(element, 1, true);
-
       if (delay === "up") {
         this.isMovingUp.splice(element, 1, true);
       } else {
         this.isMovingDown.splice(element, 1, true);
       }
+      this.opacity.splice(element, 1, opacity);
+      this.stylesImg.splice(element, 1, { opacity: opacity });
+      this.initzIndex.splice(element, 1, zIndex);
+      // eslint-disable-next-line no-console
+      console.log(element +' '+ pos)
+      //const lastPos = this.pos[element];
+      this.pos.splice(pos, 1, element);
+      this.isMovingOpacity.splice(element, 1, true);
     },
     animationMovingUp(dir) {
       let config = this.initConfig.slice();
       let opacity = this.opacity.slice();
+      let zIndex = this.initzIndex.slice();
       config.forEach((element, i) => {
         let animation = {};
+        const changezIndex = () => {
+          this.zIndex.splice(4, 1, { "z-index": -1 });
+        };
+        if (this.pos[i] === 3) {
+          //setTimeout(() => {
+          changezIndex();
+          //}, 250);
+        }
         if (i === config.length - 1) {
           let pos = config.length - 2;
           if (dir === 1) {
             pos = 0;
           }
           animation = () => {
-            this.animationConfig(i, config[pos], opacity[pos], "down");
+            this.animationConfig(
+              i,
+              config[pos],
+              opacity[pos],
+              zIndex[pos],
+              pos,
+              "down"
+            );
+            const onFinish = () => {
+              // eslint-disable-next-line no-console
+              //console.log("Animation finished");
+              /*if (i === 4) {
+                this.zIndex.splice(i, 1, { "z-index": this.initzIndex[pos] });
+              }*/
+              this.zIndex.splice(i, 1, { "z-index": zIndex[pos] });
+            };
+            setTimeout(() => {
+              onFinish();
+            }, this.duration);
+            // if (i < 3) {
+            //this.zIndex.splice(i, 1, { "z-index": zIndex[pos] });
+            //}
           };
         } else if (i === 0) {
           let pos = config.length - 1;
@@ -147,27 +190,63 @@ export default {
             pos = 1;
           }
           animation = () => {
-            this.animationConfig(i, config[pos], opacity[pos], "down");
+            this.animationConfig(
+              i,
+              config[pos],
+              opacity[pos],
+              zIndex[pos],
+              pos,
+              "down"
+            );
+            const onFinish = () => {
+              // eslint-disable-next-line no-console
+              //console.log("Animation finished");
+              /*if (i === 4) {
+                this.zIndex.splice(i, 1, { "z-index": this.initzIndex[pos] });
+              }*/
+            };
+            setTimeout(() => {
+              onFinish();
+            }, this.duration);
+            //if (i < 3) {
+            this.zIndex.splice(i, 1, { "z-index": zIndex[pos] });
+            //}
           };
         } else {
+          const pos = i + 1 * dir;
           animation = () => {
             this.animationConfig(
               i,
-              config[i + 1 * dir],
-              opacity[i + 1 * dir],
+              config[pos],
+              opacity[pos],
+              zIndex[pos],
+              pos,
               "down"
             );
+
+            const onFinish = () => {
+              // eslint-disable-next-line no-console
+              //console.log("Animation finished");
+              //this.zIndex.splice(i, 1, { "z-index": zIndex[i + 1 * dir] });
+            };
+            //if (i !== 3) {
+            this.zIndex.splice(i, 1, { "z-index": zIndex[pos] });
+            //}
+
+            //setTimeout(changezIndex, .25)
+            setTimeout(() => {
+              onFinish();
+            }, this.duration);
           };
         }
-        animation();
-        setTimeout(animation, 100 * i);
+        //animation();
+        setTimeout(animation, 10 * i);
       });
     },
 
     changeImage: function(index) {
-      let dir = 1; 
-// eslint-disable-next-line no-console
-      console.log(index +"!=="+ this.imageSelected);
+      let dir = 1;
+
       if (index !== this.imageSelected) {
         this.isMovingDown.splice(0, 5, false, false, false, false, false);
         this.isMovingUp.splice(0, 5, false, false, false, false, false);
@@ -201,6 +280,13 @@ export default {
       handler: function(value) {
         // eslint-disable-next-line no-console
         console.log("CAMBIO DE OPACITAT", value);
+      }
+    },
+    zIndex: {
+      deep: true,
+      handler: function(value) {
+        // eslint-disable-next-line no-console
+        console.log("CAMBIO DE zIndex ", value);
       }
     },
     isMovingDown: {
@@ -263,10 +349,10 @@ export default {
     transition: 0.25s linear;
   }
   .movingDown {
-    transition: transform 0.4s ease-in-out;
+    transition: transform 1s ease-in-out;
   }
   .animationImg {
-    transition: transform 0.4s ease-in-out;
+    transition: opacity 1s ease-in-out;
   }
 }
 </style>
