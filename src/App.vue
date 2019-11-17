@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <Slider msg="Welcome to Your Vue.js App"/>
+    <Slider1 msg="Welcome to Your Vue.js App"/>
   </div>
 </template>
 
 <script>
-import Slider from './components/Slider.vue'
+import Slider1 from './components/Slider1.vue'
 
 export default {
   name: 'app',
   components: {
-    Slider
+    Slider1
   }
 }
 </script>

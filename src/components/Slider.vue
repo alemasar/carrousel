@@ -98,20 +98,19 @@ export default {
       isMovingUp: [false, false, false, false, false],
       isMovingOpacity: [false, false, false, false, false],
       duration: 1000,
-      pos: [],
+      pos: [0,1,2,3,4],
 
     };
   },
   mounted() {
     const imagesLi = this.$refs.slider.querySelectorAll("li");
     imagesLi.forEach((img, i) => {
-      const left = (img.offsetWidth - this.x_offset) * i;
-      const top = this.y_offset * this.top[i];
+      const left = (img.offsetWidth - this.x_offset) * this.pos[i];
+      const top = this.y_offset * this.top[this.pos[i]];
       this.initConfig[i] = this.getStyle(left, top);
       this.styles.push(this.getStyle(left, top));
-      this.zIndex.push({ "z-index": this.initzIndex[i] });
-      this.stylesImg.push({ opacity: this.opacity[i] });
-      this.pos.push(i);
+      this.zIndex.push({ "z-index": this.initzIndex[this.pos[i]] });
+      this.stylesImg.push({ opacity: this.opacity[this.pos[i]] });
     });
 
     this.show = true;
