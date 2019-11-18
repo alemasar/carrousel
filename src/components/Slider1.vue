@@ -30,41 +30,41 @@ export default {
         "01_img.png",
         "02_img.jpg",
         "03_img.jpg",
-        "04_img.png",
-        "05_img.jpg"
+        "04_img.png"
+        //        "05_img.jpg"
       ],
       animation: [
-        { pos: 2, opacity: 1, top: 0, left: 0, zIndex: 2 },
-        { pos: 3, opacity: 0.5, top: 1, left: 0, zIndex: 1 },
-        { pos: 4, opacity: 0.5, top: 2, left: 0, zIndex: 0 },
-        { pos: 0, opacity: 0.5, top: 2, left: 0, zIndex: 0 },
-        { pos: 1, opacity: 0.5, top: 1, left: 0, zIndex: 1 }
+        { pos: 0, opacity: 0.5, top: 1, left: 0, scaleX: .5, scaleY: .5, zIndex: [1, 2] },
+        { pos: 1, opacity: 1, top: 0, left: 1, scaleX: .5, scaleY: .5, zIndex: [3, 3] },
+        // { pos: 4, opacity: 0.5, top: 2, left: 0, zIndex: 0 },
+        { pos: 2, opacity: 0.5, top: 1, left: 2, scaleX: .5, scaleY: .5, zIndex: [2, 1] },
+        { pos: 3, opacity: 0.5, top: 0, left: 1, scaleX: .5, scaleY: .5, zIndex: [-1, -1] }
       ],
       position: [],
       opacity: [],
-      top: [2, 1, 0, 1, 2],
+      top: [1, 0, 1, 0],
       x_offset: 100,
       y_offset: 30,
       zIndex: [],
-      imageSelected: 2,
-      transformAni: [{}, {}, {}, {}, {}],
-      opacityAni: [{}, {}, {}, {}, {}],
+      imageSelected: 0,
+      transformAni: [{}, {}, {}, {}],
+      opacityAni: [{}, {}, {}, {}],
       background: [],
-      delay: 1
+      delay: .4
     };
   },
   mounted() {
     const imagesLi = this.$refs.slider.querySelectorAll("li");
     imagesLi.forEach((img, i) => {
-      // eslint-disable-next-line no-console
-      console.log(i);
-      const left = (img.offsetWidth - this.x_offset) * this.animation[i].pos;
+      const left = (img.offsetWidth - this.x_offset) * this.animation[i].left;
       const top = this.y_offset * this.animation[i].top;
       this.animation[i].left = left;
       this.animation[i].top = top;
       this.position.push(this.getPosition(left, top));
       this.opacity.push(this.getOpacity(this.animation[i].opacity));
-      this.zIndex.push(this.getzIndex(this.animation[i].zIndex));
+      // eslint-disable-next-line no-console
+      console.log(this.animation[i].zIndex);
+      this.zIndex.push(this.getzIndex(this.animation[i].zIndex[1]));
       this.background.push(this.getBackgroundColor("#fff"));
     });
   },
@@ -96,8 +96,10 @@ export default {
     },
     beforeMove(dir) {
       let todoList = this.animation.slice();
+      this.animation = [];
       todoList.forEach((element, i) => {
         let pos = 0;
+
         if (i === 0 && dir === -1) {
           pos = todoList.length - 1;
         } else if (i === todoList.length - 1 && dir === 1) {
@@ -105,32 +107,24 @@ export default {
         } else {
           pos = i + dir;
         }
-
-        let nextELement = {};
-        nextELement.pos = todoList[pos].pos;
-        nextELement.left = todoList[pos].left;
-        nextELement.top = todoList[pos].top;
-        nextELement.opacity = todoList[pos].opacity;
-        nextELement.zIndex = todoList[pos].zIndex;
-        this.animation.splice(i, 1, nextELement);
+        let nextElement = {};
+        nextElement.pos = pos;
+        nextElement.left = todoList[pos].left;
+        nextElement.top = todoList[pos].top;
+        nextElement.opacity = todoList[pos].opacity;
+        nextElement.zIndex = todoList[pos].zIndex;
+        this.animation.push(nextElement);
       });
       this.move(dir);
     },
     move(dir) {
       this.animation.forEach((element, i) => {
-        if (
-          (element.pos === 0 && dir === 1) ||
-          (element.pos === this.animation.length - 1 && dir === -1)
-        ) {
-          // eslint-disable-next-line no-console
-          console.log(" if element.pos " + element.pos + " index " + i);
-          this.zIndex.splice(i, 1, this.getzIndex(-1));
-        } else {
-          // eslint-disable-next-line no-console
-          console.log("else element.pos " + element.pos + " index " + i);
-          this.zIndex.splice(i, 1, this.getzIndex(element.zIndex));
+        // eslint-disable-next-line no-console
+        console.log("Pos inicial " + element.pos + " pos final " + i);
+        let zIndex = 0;
+        if (dir < 0) {
+          zIndex = 1;
         }
-        //this.background.splice(i, 1, this.getBackgroundColor("transparent"));
         const animate = () => {
           this.position.splice(
             i,
@@ -140,29 +134,40 @@ export default {
           this.opacity.splice(i, 1, this.getOpacity(element.opacity));
           this.transformAni.splice(i, 1, this.getTransitionAni(this.delay));
           this.opacityAni.splice(i, 1, this.getOpacityAni(this.delay));
-          
-          const onFinish = ()=>{
-            this.background.splice(i, 1, this.getBackgroundColor("#fff"));
-          }
-          setTimeout(onFinish,
-           this.delay)
+          // eslint-disable-next-line no-console
+          console.log(i + ":  left: " + element.left + "  top: " + element.top);
+          this.zIndex.splice(i, 1, this.getzIndex(element.zIndex[zIndex]));
+          const onFinish = () => {
+            /*            if (element.pos === 2 && dir === 1) {
+              // eslint-disable-next-line no-console
+              //console.log(" if element.pos " + element.pos + " index " + i);
+              // this.zIndex.splice(element.pos, 1, this.getzIndex(1));
+            }*/
+            this.background.splice(
+              element.pos,
+              1,
+              this.getBackgroundColor("#fff")
+            );
+            //this.changeImage(this.imageSelected + 1)
+          };
+          setTimeout(onFinish, this.delay*1000);
         };
-        setTimeout(() => {
-          animate();
-        }, 100 * i);
+        //setTimeout(() => {
+        animate();
+        //}, 100 * i);
       });
-      // eslint-disable-next-line no-console
-      console.log(this.zIndex);
     },
     changeImage: function(index) {
       let dir = 1;
-      // eslint-disable-next-line no-console
-      console.log("imageSelected " + this.imageSelected + "index " + index);
-      if (index !== 2) {
+      if (index !== 1) {
         if (index < this.imageSelected) {
           dir = -1;
         }
+        /*setTimeout(()=>{
+          dir*/
         this.beforeMove(dir);
+        //}, 3000)
+
         this.imageSelected = index;
       }
     }
