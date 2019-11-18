@@ -4,7 +4,7 @@
       <li
         v-for="(image, index) in images"
         :key="index"
-        :style="[position[index], zIndex[index], transformAni[index]]"
+        :style="[position[index], zIndex[index], background[index], transformAni[index]]"
       >
         {{animation[index]}}
         <img
@@ -49,6 +49,7 @@ export default {
       imageSelected: 2,
       transformAni: [{}, {}, {}, {}, {}],
       opacityAni: [{}, {}, {}, {}, {}],
+      background: [],
       delay: 1
     };
   },
@@ -64,6 +65,7 @@ export default {
       this.position.push(this.getPosition(left, top));
       this.opacity.push(this.getOpacity(this.animation[i].opacity));
       this.zIndex.push(this.getzIndex(this.animation[i].zIndex));
+      this.background.push(this.getBackgroundColor("#fff"));
     });
   },
   methods: {
@@ -72,8 +74,7 @@ export default {
     },
     getPosition(left, top /*, zIndex*/) {
       return {
-        transform: `translate(${left}px, ${top}px)`,
-        "background-color": "#fff"
+        transform: `translate(${left}px, ${top}px)`
       };
     },
     getOpacity(opacity) {
@@ -83,6 +84,9 @@ export default {
     },
     getzIndex(zIndex) {
       return { "z-index": zIndex };
+    },
+    getBackgroundColor(color) {
+      return { "background-color": color };
     },
     getTransitionAni(delay) {
       return { transition: `transform ${delay}s ease-in-out` };
@@ -114,7 +118,10 @@ export default {
     },
     move(dir) {
       this.animation.forEach((element, i) => {
-        if ((element.pos === 0 && dir === 1) || (element.pos === this.animation.length - 1 && dir === -1)) {
+        if (
+          (element.pos === 0 && dir === 1) ||
+          (element.pos === this.animation.length - 1 && dir === -1)
+        ) {
           // eslint-disable-next-line no-console
           console.log(" if element.pos " + element.pos + " index " + i);
           this.zIndex.splice(i, 1, this.getzIndex(-1));
@@ -123,6 +130,7 @@ export default {
           console.log("else element.pos " + element.pos + " index " + i);
           this.zIndex.splice(i, 1, this.getzIndex(element.zIndex));
         }
+        //this.background.splice(i, 1, this.getBackgroundColor("transparent"));
         const animate = () => {
           this.position.splice(
             i,
@@ -132,6 +140,12 @@ export default {
           this.opacity.splice(i, 1, this.getOpacity(element.opacity));
           this.transformAni.splice(i, 1, this.getTransitionAni(this.delay));
           this.opacityAni.splice(i, 1, this.getOpacityAni(this.delay));
+          
+          const onFinish = ()=>{
+            this.background.splice(i, 1, this.getBackgroundColor("#fff"));
+          }
+          setTimeout(onFinish,
+           this.delay)
         };
         setTimeout(() => {
           animate();
@@ -144,7 +158,7 @@ export default {
       let dir = 1;
       // eslint-disable-next-line no-console
       console.log("imageSelected " + this.imageSelected + "index " + index);
-      if (index !== 2 && index !== this.imageSelected) {
+      if (index !== 2) {
         if (index < this.imageSelected) {
           dir = -1;
         }
