@@ -4,17 +4,19 @@
       <li
         v-for="(image, index) in images"
         :key="index"
-        :style="[position[index], zIndex[index], background[index], transformAni[index]]"
+        :style="[position[index],  zIndex[index], background[index], transformAni[index]]"
       >
-        {{animation[index]}}
-        <img
-          :style="[opacity[index], opacityAni[index]]"
-          :src="getImgUrl(image)"
-        />
+        <!--{{animation[index]}}-->
+        <img :style="[opacity[index], opacityAni[index]]" :src="getImgUrl(image)" />
       </li>
     </ul>
     <ul class="slider-navigator">
-      <li v-for="(image, indexImg) in images" :key="indexImg" v-on:click="changeImage(indexImg)">
+      <li
+        v-for="(image, indexImg) in images"
+        :key="indexImg"
+        v-on:click="changeImage(indexImg)"
+        :class="activeImage(indexImg)"
+      >
         {{indexImg}}
         <div class="round"></div>
       </li>
@@ -34,11 +36,43 @@ export default {
         //        "05_img.jpg"
       ],
       animation: [
-        { pos: 0, opacity: 0.5, top: 1, left: 0, scaleX: .5, scaleY: .5, zIndex: [1, 2] },
-        { pos: 1, opacity: 1, top: 0, left: 1, scaleX: .5, scaleY: .5, zIndex: [3, 3] },
+        {
+          pos: 0,
+          opacity: 0.5,
+          top: 1,
+          left: 0,
+          scaleX: 0.8,
+          scaleY: 0.8,
+          zIndex: [1, 2]
+        },
+        {
+          pos: 1,
+          opacity: 1,
+          top: 0,
+          left: 1,
+          scaleX: 1,
+          scaleY: 1,
+          zIndex: [3, 3]
+        },
         // { pos: 4, opacity: 0.5, top: 2, left: 0, zIndex: 0 },
-        { pos: 2, opacity: 0.5, top: 1, left: 2, scaleX: .5, scaleY: .5, zIndex: [2, 1] },
-        { pos: 3, opacity: 0.5, top: 0, left: 1, scaleX: .5, scaleY: .5, zIndex: [-1, -1] }
+        {
+          pos: 2,
+          opacity: 0.5,
+          top: 1,
+          left: 2,
+          scaleX: 0.8,
+          scaleY: 0.8,
+          zIndex: [2, 1]
+        },
+        {
+          pos: 3,
+          opacity: 0.5,
+          top: 0,
+          left: 1,
+          scaleX: 1,
+          scaleY: 1,
+          zIndex: [-1, -1]
+        }
       ],
       position: [],
       opacity: [],
@@ -46,11 +80,14 @@ export default {
       x_offset: 100,
       y_offset: 30,
       zIndex: [],
-      imageSelected: 0,
+      imageSelected: 1,
       transformAni: [{}, {}, {}, {}],
       opacityAni: [{}, {}, {}, {}],
       background: [],
-      delay: .4
+      delay: 0.4,
+      delayBetweenFrames: 0,
+      delayBetweenImages: 0,
+      moving: false
     };
   },
   mounted() {
@@ -58,9 +95,12 @@ export default {
     imagesLi.forEach((img, i) => {
       const left = (img.offsetWidth - this.x_offset) * this.animation[i].left;
       const top = this.y_offset * this.animation[i].top;
+      const scaleX = this.animation[i].scaleX;
+      const scaleY = this.animation[i].scaleY;
       this.animation[i].left = left;
       this.animation[i].top = top;
-      this.position.push(this.getPosition(left, top));
+      this.position.push(this.getTransform(left, top, scaleX, scaleY));
+      //this.scale.push(this.getScale(scaleX, scaleY));
       this.opacity.push(this.getOpacity(this.animation[i].opacity));
       // eslint-disable-next-line no-console
       console.log(this.animation[i].zIndex);
@@ -69,12 +109,17 @@ export default {
     });
   },
   methods: {
+    activeImage: function(index) {
+      return {
+        active: this.imageSelected === index
+      };
+    },
     getImgUrl(image) {
       return require("../assets/" + image);
     },
-    getPosition(left, top /*, zIndex*/) {
+    getTransform(left, top, scaleX, scaleY) {
       return {
-        transform: `translate(${left}px, ${top}px)`
+        transform: `translate(${left}px, ${top}px) scale(${scaleX}, ${scaleY})`
       };
     },
     getOpacity(opacity) {
@@ -111,13 +156,15 @@ export default {
         nextElement.pos = pos;
         nextElement.left = todoList[pos].left;
         nextElement.top = todoList[pos].top;
+        nextElement.scaleX = todoList[pos].scaleX;
+        nextElement.scaleY = todoList[pos].scaleY;
         nextElement.opacity = todoList[pos].opacity;
         nextElement.zIndex = todoList[pos].zIndex;
         this.animation.push(nextElement);
       });
-      this.move(dir);
+      this.makeAnimation(dir);
     },
-    move(dir) {
+    makeAnimation(dir) {
       this.animation.forEach((element, i) => {
         // eslint-disable-next-line no-console
         console.log("Pos inicial " + element.pos + " pos final " + i);
@@ -129,7 +176,12 @@ export default {
           this.position.splice(
             i,
             1,
-            this.getPosition(element.left, element.top)
+            this.getTransform(
+              element.left,
+              element.top,
+              element.scaleX,
+              element.scaleY
+            )
           );
           this.opacity.splice(i, 1, this.getOpacity(element.opacity));
           this.transformAni.splice(i, 1, this.getTransitionAni(this.delay));
@@ -137,38 +189,64 @@ export default {
           // eslint-disable-next-line no-console
           console.log(i + ":  left: " + element.left + "  top: " + element.top);
           this.zIndex.splice(i, 1, this.getzIndex(element.zIndex[zIndex]));
-          const onFinish = () => {
-            /*            if (element.pos === 2 && dir === 1) {
-              // eslint-disable-next-line no-console
-              //console.log(" if element.pos " + element.pos + " index " + i);
-              // this.zIndex.splice(element.pos, 1, this.getzIndex(1));
-            }*/
-            this.background.splice(
-              element.pos,
-              1,
-              this.getBackgroundColor("#fff")
-            );
-            //this.changeImage(this.imageSelected + 1)
-          };
-          setTimeout(onFinish, this.delay*1000);
+          //const onFinish = () => {
+          this.background.splice(
+            element.pos,
+            1,
+            this.getBackgroundColor("#fff")
+          );
+          //};
+          //setTimeout(onFinish, this.delay * 1000);
         };
-        //setTimeout(() => {
-        animate();
-        //}, 100 * i);
+        if (this.delayBetweenImages > 0) {
+          setTimeout(() => {
+            animate();
+          }, this.delayBetweenImages * i);
+        } else {
+          animate();
+        }
       });
     },
-    changeImage: function(index) {
-      let dir = 1;
-      if (index !== 1) {
-        if (index < this.imageSelected) {
-          dir = -1;
+    move: function(animation) {
+      const onFinish = () => {
+        const ani = animation.shift();
+        if (ani) {
+          ani();
+          setTimeout(() => {
+            this.move(animation);
+          }, this.delayBetweenFrames * 1000);
+        } else {
+        // eslint-disable-next-line no-console
+        console.log("fin animacion");
+        this.moving = false;
         }
-        /*setTimeout(()=>{
-          dir*/
-        this.beforeMove(dir);
-        //}, 3000)
+      };
+      setTimeout(onFinish, this.delay * 1000);
+    },
+    changeImage: function(index) {
+      if (!this.moving) {
+        this.moving = true;
+        let dir = 1;
+        let dist = this.imageSelected - index;
 
-        this.imageSelected = index;
+        if (dist !== 0) {
+          if (dist < 0) {
+            dir = -1;
+            dist *= -1;
+          }
+          /*setTimeout(()=>{
+          dir*/
+          // eslint-disable-next-line no-unused-vars
+          const animationFrames = Array.from({ length: dist }, x => () => {
+            this.beforeMove(dir);
+          });
+          // eslint-disable-next-line no-console
+          console.log(animationFrames);
+          this.move(animationFrames);
+          //}, 3000)
+
+          this.imageSelected = index;
+        }
       }
     }
   }
@@ -180,7 +258,7 @@ export default {
     display: flex;
     list-style: none;
     position: relative;
-    height: 350px;
+    height: 330px;
     overflow: hidden;
 
     li {
@@ -203,16 +281,10 @@ export default {
       border-radius: 50%;
       margin-right: 20px;
       cursor: pointer;
+      &.active {
+        background-color: red;
+      }
     }
-  }
-  .movingUp {
-    transition: 0.25s linear;
-  }
-  .movingDown {
-    transition: transform 1s ease-in-out;
-  }
-  .animationImg {
-    transition: opacity 1s ease-in-out;
   }
 }
 </style>
