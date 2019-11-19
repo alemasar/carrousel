@@ -1,5 +1,6 @@
 <template>
   <div class="slider-container">
+    <div class="selected-image-mask"></div>
     <ul ref="slider" class="slider">
       <li
         v-for="(image, index) in images"
@@ -85,7 +86,7 @@ export default {
       opacityAni: [{}, {}, {}, {}],
       background: [],
       delay: 0.4,
-      delayBetweenFrames: 0,
+      delayBetweenFrames: 0.2,
       delayBetweenImages: 0,
       moving: false
     };
@@ -254,12 +255,26 @@ export default {
 </script>
 <style lang="scss" scoped>
 .slider-container {
+    position: relative;
+    overflow: hidden;
+    width:670px;
+  div.selected-image-mask{
+    background: transparent url(../assets/selected-image-mask.png) no-repeat top left;
+    background-size: 270px 380px;
+    top: -2px;
+    left:50%;
+    transform: translateX(-50%);
+    width:300px;
+    height:600px;
+    position:absolute;
+    z-index:100;
+  }
   ul.slider {
     display: flex;
     list-style: none;
     position: relative;
     height: 330px;
-    overflow: hidden;
+
 
     li {
       width: 250px;
